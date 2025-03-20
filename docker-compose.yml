@@ -1,0 +1,100 @@
+
+networks:
+  public-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.110.0/24
+
+  site-1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.10.110.0/24
+          gateway: 10.10.110.1
+  
+  site-2:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.20.110.0/24
+          gateway: 10.20.110.1
+
+
+services:
+  # ca-server:
+  #   build: ./ca-server
+  #   container_name: ca-server
+  #   image: ca-server
+  #   hostname: ca-server
+  #   networks:
+  #     public-network: 
+  #       ipv4_address: 192.168.110.150
+
+  gateway-site-1:
+    build: ./site-1/gateway/
+    container_name: gateway-site-1
+    image: gateway-site-1
+    hostname: gateway-site-1
+    privileged: true
+    restart: always
+    volumes:
+      - ./site-1/gateway/ipsec.conf:/etc/ipsec.conf
+      - ./site-1/gateway/ipsec.secrets:/etc/ipsec.secrets
+    networks:
+      site-1:
+        ipv4_address: 10.10.110.130
+      public-network:
+        ipv4_address: 192.168.110.130
+    
+
+  internal-site-1:
+    build: ./site-1/internal/
+    image: internal-site-1
+    container_name: internal-site-1
+    hostname: internal-site-1
+    networks:
+      site-1:
+        ipv4_address: 10.10.110.10
+
+  gateway-site-2:
+    build: ./site-2/gateway/
+    image: gateway-site-2
+    container_name: gateway-site-2
+    hostname: gateway-site-2
+    privileged: true
+    restart: always
+    volumes:
+      - ./site-2/gateway/ipsec.conf:/etc/ipsec.conf
+      - ./site-2/gateway/ipsec.secrets:/etc/ipsec.secrets
+    networks:
+      site-2:
+        ipv4_address: 10.20.110.130
+      public-network:
+        ipv4_address: 192.168.110.140
+    
+  internal-site-2:
+    build: ./site-2/internal/
+    image: internal-site-2
+    container_name: internal-site-2
+    hostname: internal-site-2
+    networks:
+      site-2:
+        ipv4_address: 10.20.110.10
+
+
+  # vpn-client:
+  #   build: ./client/
+  #   container_name: vpn-client
+  #   image: vpn-client
+  #   privileged: true
+  #   hostname: vpn-client
+  #   restart: always
+  #   depends_on:
+  #     - gateway-site-1
+  #   volumes:
+  #     - ./client/ipsec.conf:/etc/ipsec.conf
+  #     - ./client/ipsec.secrets:/etc/ipsec.secrets
+  #   networks:
+  #     public-network:
+  #       ipv4_address: 192.168.110.200
