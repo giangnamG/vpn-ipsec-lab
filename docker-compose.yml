@@ -56,6 +56,9 @@ services:
     networks:
       site-1:
         ipv4_address: 10.10.110.10
+    cap_add:
+      - NET_ADMIN
+    command: sh -c "ip route del default && ip route add default via 10.10.110.130 && tail -f /dev/null"
 
   gateway-site-2:
     build: ./site-2/gateway/
@@ -81,7 +84,9 @@ services:
     networks:
       site-2:
         ipv4_address: 10.20.110.10
-
+    cap_add:
+      - NET_ADMIN
+    command: sh -c "ip route del default && ip route add default via 10.20.110.130 && tail -f /dev/null"
 
   # vpn-client:
   #   build: ./client/
